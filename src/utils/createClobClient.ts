@@ -8,13 +8,14 @@ const PROXY_WALLET = ENV.PROXY_WALLET;
 const PRIVATE_KEY = ENV.PRIVATE_KEY;
 const CLOB_HTTP_URL = ENV.CLOB_HTTP_URL;
 const RPC_URL = ENV.RPC_URL;
+
 /**
  * Determines if a wallet is a Gnosis Safe by checking if it has contract code
  */
-const isGnosisSafe = async (address: string): Promise<boolean> => {
+const isGnosisSafe = async (address: string, rpcUrl?: string): Promise<boolean> => {
     try {
         // Using ethers v5 syntax
-        const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+        const provider = new ethers.providers.JsonRpcProvider(rpcUrl || RPC_URL);
         const code = await provider.getCode(address);
         // If code is not "0x", then it's a contract (likely Gnosis Safe)
         return code !== '0x';
@@ -22,6 +23,64 @@ const isGnosisSafe = async (address: string): Promise<boolean> => {
         Logger.error(`Error checking wallet type: ${error}`);
         return false;
     }
+};
+
+/**
+ * Create a ClobClient for a specific user (multi-user mode)
+ * @param privateKey - User's decrypted private key
+ * @param proxyWallet - User's proxy wallet address
+ * @returns ClobClient configured for the specific user
+ */
+export const createClobClientForUser = async (
+    privateKey: string,
+    proxyWallet: string
+): Promise<ClobClient> => {
+    const chainId = 137;
+    const host = CLOB_HTTP_URL as string;
+    const wallet = new ethers.Wallet(privateKey);
+
+    // Detect if the proxy wallet is a Gnosis Safe or EOA
+    const isProxySafe = await isGnosisSafe(proxyWallet);
+    const signatureType = isProxySafe ? SignatureType.POLY_GNOSIS_SAFE : SignatureType.EOA;
+
+    Logger.info(
+        `Wallet type for ${proxyWallet.slice(0, 6)}...${proxyWallet.slice(-4)}: ${isProxySafe ? 'Gnosis Safe' : 'EOA'}`
+    );
+
+    let clobClient = new ClobClient(
+        host,
+        chainId,
+        wallet,
+        undefined,
+        signatureType,
+        isProxySafe ? proxyWallet : undefined
+    );
+
+    // Suppress console output during API key creation
+    const originalConsoleLog = console.log;
+    const originalConsoleError = console.error;
+    console.log = function () {};
+    console.error = function () {};
+
+    let creds = await clobClient.createApiKey();
+    if (!creds.key) {
+        creds = await clobClient.deriveApiKey();
+    }
+
+    clobClient = new ClobClient(
+        host,
+        chainId,
+        wallet,
+        creds,
+        signatureType,
+        isProxySafe ? proxyWallet : undefined
+    );
+
+    // Restore console functions
+    console.log = originalConsoleLog;
+    console.error = originalConsoleError;
+
+    return clobClient;
 };
 
 const createClobClient = async (): Promise<ClobClient> => {

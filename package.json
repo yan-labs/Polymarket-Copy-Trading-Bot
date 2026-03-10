@@ -9,6 +9,8 @@
         "build": "tsc",
         "start": "node dist/index.js",
         "dev": "ts-node src/index.ts",
+        "dev:multiuser": "ts-node src/index-multiuser.ts",
+        "start:multiuser": "node dist/index-multiuser.js",
         "check-allowance": "ts-node src/scripts/checkAllowance.ts",
         "verify-allowance": "ts-node src/scripts/verifyAllowance.ts",
         "set-token-allowance": "ts-node src/scripts/setTokenAllowance.ts",
