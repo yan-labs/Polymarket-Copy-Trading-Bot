@@ -14,6 +14,8 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Save } from "lucide-react"
+import SubscriptionInfo from "@/components/SubscriptionInfo"
+import { SubscriptionTier, SubscriptionStatus } from "@/types/subscription"
 
 interface Settings {
   copyStrategy: "PERCENTAGE" | "FIXED" | "ADAPTIVE"
@@ -30,6 +32,15 @@ interface Settings {
     positionClosed: boolean
     dailySummary: boolean
   }
+}
+
+interface UserSubscription {
+  tier: SubscriptionTier
+  status?: SubscriptionStatus
+  currentPeriodEnd?: string
+  cancelAtPeriodEnd?: boolean
+  tradesThisMonth?: number
+  tradersCount?: number
 }
 
 export default function SettingsPage() {
@@ -49,12 +60,21 @@ export default function SettingsPage() {
       dailySummary: false,
     },
   })
+  const [subscription, setSubscription] = useState<UserSubscription>({
+    tier: "free",
+    status: undefined,
+    currentPeriodEnd: undefined,
+    cancelAtPeriodEnd: false,
+    tradesThisMonth: 0,
+    tradersCount: 0,
+  })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
     fetchSettings()
+    fetchSubscription()
   }, [])
 
   async function fetchSettings() {
@@ -68,6 +88,20 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error("Failed to fetch settings:", error)
+    }
+  }
+
+  async function fetchSubscription() {
+    try {
+      const response = await fetch("/api/subscription")
+      if (response.ok) {
+        const data = await response.json()
+        if (data.subscription) {
+          setSubscription(data.subscription)
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch subscription:", error)
     } finally {
       setLoading(false)
     }
@@ -115,6 +149,16 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
         <p className="text-gray-600">Configure your copy trading preferences.</p>
       </div>
+
+      {/* Subscription Info */}
+      <SubscriptionInfo
+        tier={subscription.tier}
+        status={subscription.status}
+        currentPeriodEnd={subscription.currentPeriodEnd}
+        cancelAtPeriodEnd={subscription.cancelAtPeriodEnd}
+        tradesThisMonth={subscription.tradesThisMonth}
+        tradersCount={subscription.tradersCount}
+      />
 
       {/* Copy Strategy */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
