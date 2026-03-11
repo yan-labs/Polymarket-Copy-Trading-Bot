@@ -1,8 +1,23 @@
 # PROGRESS.md - Polymarket Copy Trading Bot
 
-## Current Status: Phase 5 Ready - Deployment Configured! 🚀
+## Current Status: Phase 5 Ready - NEEDS DEPLOYMENT KEYS 🔑
 
-**Last Updated**: 2026-03-11 11:15 (Asia/Shanghai)
+**Last Updated**: 2026-03-12 03:30 (Asia/Shanghai)
+
+### ⚠️ ACTION NEEDED - Need Yan to provide:
+1. **Stripe API keys** - Create at dashboard.stripe.com (10 min)
+2. **MongoDB URI** - Create at mongodb.com/atlas (5 min)
+
+**After keys provided → Deploy in 5 min via Vercel button!**
+
+---
+
+### Latest Updates (2026-03-12 03:30) ✅ DEPLOYMENT SIMPLIFIED
+- [x] **QUICKSTART.md created** - Simple 3-step launch guide
+- [x] **Vercel deploy button added** - One-click deploy from README
+- [x] **Product Hunt launch kit** - PRODUCT_HUNT.md ready
+- [x] **README updated** - Better marketing copy
+- [x] **Committed and pushed to GitHub** ✅
 
 ### Latest Updates (2026-03-11 11:15) ✅ RISK MANAGEMENT & TELEGRAM NOTIFICATIONS
 - [x] **Risk Manager** - Stop-loss, take-profit, trailing stops, position limits, auto-pause
