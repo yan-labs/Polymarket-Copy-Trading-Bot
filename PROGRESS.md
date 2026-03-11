@@ -1,16 +1,29 @@
 # PROGRESS.md - Polymarket Copy Trading Bot
 
-## Current Status: Phase 5 Ready - NEEDS DEPLOYMENT KEYS 🔑
+## Current Status: Phase 5 Ready - DEMO MODE AVAILABLE 🎉
 
-**Last Updated**: 2026-03-12 03:55 (Asia/Shanghai)
+**Last Updated**: 2026-03-12 04:45 (Asia/Shanghai)
 
 ### ⚠️ ACTION NEEDED - Need Yan to provide:
 1. **Stripe API keys** - Create at dashboard.stripe.com (10 min)
 2. **MongoDB URI** - Create at mongodb.com/atlas (5 min)
 
+**OR use Demo Mode for testing!** Set `DEMO_MODE=true` and `NEXT_PUBLIC_DEMO_MODE=true` in `.env.local`
+
 **After keys provided → Deploy in 5 min via Vercel button!**
 
 ---
+
+### Latest Updates (2026-03-12 04:45) ✅ DEMO MODE ADDED
+- [x] **Demo mode feature** - Test product without Stripe API keys!
+- [x] **DEMO_MODE env variable** - Server-side demo mode flag
+- [x] **NEXT_PUBLIC_DEMO_MODE** - Client-side demo mode flag
+- [x] **Demo checkout route** - `/api/demo/subscribe` for demo subscriptions
+- [x] **Demo banner** - Shows on pricing page when demo mode active
+- [x] **Demo indicator** - Shows in SubscriptionInfo component
+- [x] **Build verified** - Web (26 pages) and bot both compile successfully
+- [x] **Committed and pushed to GitHub** ✅
+- [ ] **Ready for**: Yan to test with demo mode or provide Stripe keys
 
 ### Latest Updates (2026-03-12 03:55) ✅ CODE VERIFICATION & WEBSOCKET OPPORTUNITY
 - [x] **Build verification** - Bot and web both compile successfully
@@ -294,18 +307,27 @@ npm run dev:multiuser
 ## 📊 Stats
 
 - **GitHub**: https://github.com/yan-labs/Polymarket-Copy-Trading-Bot
-- **Pages**: 9
-- **API Routes**: 12
+- **Pages**: 26
+- **API Routes**: 16
 - **Build Status**: ✅ SUCCESS
 - **Revenue Ready**: ✅ YES
 - **Deploy Config**: ✅ YES
 - **Free Trial**: ✅ YES (7 days Pro)
+- **Demo Mode**: ✅ YES (test without Stripe)
 
 ---
 
 ## Next Immediate Steps
 
 ### To Get First Paying Customer (Updated):
+
+**Option A: Test with Demo Mode** (5 min) 🆕
+1. Set `DEMO_MODE=true` and `NEXT_PUBLIC_DEMO_MODE=true` in `.env.local`
+2. Run `npm run dev` in web directory
+3. Test all subscription flows without Stripe
+4. See how the product works!
+
+**Option B: Production Launch** ⚠️ MANUAL STEPS
 
 1. **Create Stripe Products** (10 min) ⚠️ MANUAL STEP
    - Go to dashboard.stripe.com
