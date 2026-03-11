@@ -2,7 +2,14 @@
 
 ## Current Status: Phase 5 Ready - Deployment Configured! 🚀
 
-**Last Updated**: 2026-03-11 09:15 (Asia/Shanghai)
+**Last Updated**: 2026-03-11 10:15 (Asia/Shanghai)
+
+### Latest Updates (2026-03-11 10:15) ✅ SETUP SCRIPT ADDED
+- [x] **setup.sh script** - Automates Stripe product creation via API
+- [x] **Fixed setup.sh** - Now updates STRIPE_PRICES in-place (doesn't overwrite stripe.ts)
+- [x] **Build verified** - Next.js 16 compiles successfully (23 pages)
+- [x] **Committed and pushed to GitHub** ✅
+- [ ] **Waiting for**: Stripe API key + MongoDB Atlas URI from Yan
 
 ### Latest Updates (2026-03-11 09:09-09:15) 🔥 DEPLOYMENT CONFIG & FREE TRIAL
 - [x] **7-day free trial** - New users get Pro tier for 7 days
