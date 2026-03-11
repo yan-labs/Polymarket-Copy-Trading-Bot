@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, X, CreditCard, Calendar, AlertCircle, Loader2 } from 'lucide-react';
+import { Check, X, CreditCard, Calendar, AlertCircle, Loader2, Clock, Gift } from 'lucide-react';
 import { TIER_LIMITS, SubscriptionTier, SubscriptionStatus } from '@/types/subscription';
 
 interface SubscriptionInfoProps {
@@ -11,6 +11,10 @@ interface SubscriptionInfoProps {
   cancelAtPeriodEnd?: boolean;
   tradesThisMonth?: number;
   tradersCount?: number;
+  // Trial props
+  trialEndsAt?: string;
+  trialDaysRemaining?: number;
+  trialTier?: SubscriptionTier;
 }
 
 export default function SubscriptionInfo({
@@ -20,10 +24,14 @@ export default function SubscriptionInfo({
   cancelAtPeriodEnd,
   tradesThisMonth = 0,
   tradersCount = 0,
+  trialEndsAt,
+  trialDaysRemaining,
+  trialTier,
 }: SubscriptionInfoProps) {
   const [loading, setLoading] = useState(false);
 
   const tierInfo = TIER_LIMITS[tier] || TIER_LIMITS.free;
+  const isTrial = trialEndsAt && trialDaysRemaining && trialDaysRemaining > 0;
 
   const handleManageSubscription = async () => {
     setLoading(true);
@@ -49,6 +57,16 @@ export default function SubscriptionInfo({
   };
 
   const getStatusBadge = () => {
+    // Show trial badge if on trial
+    if (isTrial) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm">
+          <Gift className="w-3 h-3" />
+          {trialDaysRemaining} days left
+        </span>
+      );
+    }
+
     switch (status) {
       case 'active':
         return (
@@ -74,7 +92,7 @@ export default function SubscriptionInfo({
       case 'trialing':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
-            <Calendar className="w-3 h-3" />
+            <Clock className="w-3 h-3" />
             Trialing
           </span>
         );
@@ -93,6 +111,25 @@ export default function SubscriptionInfo({
         <h3 className="text-lg font-semibold">Subscription</h3>
         {getStatusBadge()}
       </div>
+
+      {/* Trial Banner */}
+      {isTrial && (
+        <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <Gift className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-purple-300 font-medium">Free Trial Active</p>
+              <p className="text-gray-300 text-sm mt-1">
+                You have <span className="font-bold text-white">{trialDaysRemaining} days</span> left of your 
+                {' '}<span className="font-bold text-white">{trialTier || 'Pro'}</span> trial.
+              </p>
+              <p className="text-gray-400 text-xs mt-2">
+                Enjoy unlimited access to all features. Subscribe to keep your access.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Plan Info */}
       <div className="grid grid-cols-2 gap-4">
@@ -125,6 +162,21 @@ export default function SubscriptionInfo({
         <p className="text-gray-500 text-xs mt-1">Resets on billing date</p>
       </div>
 
+      {/* Trial Ending Notice */}
+      {isTrial && trialDaysRemaining && trialDaysRemaining <= 3 && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-yellow-400 font-medium">Trial Ending Soon!</p>
+              <p className="text-gray-400 text-sm mt-1">
+                Your trial ends in {trialDaysRemaining} days. Subscribe now to keep your access.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Cancellation Notice */}
       {cancelAtPeriodEnd && currentPeriodEnd && (
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
@@ -147,7 +199,7 @@ export default function SubscriptionInfo({
       )}
 
       {/* Expiration Date */}
-      {currentPeriodEnd && !cancelAtPeriodEnd && tier !== 'free' && (
+      {currentPeriodEnd && !cancelAtPeriodEnd && tier !== 'free' && !isTrial && (
         <div className="flex items-center gap-2 text-gray-400 text-sm">
           <Calendar className="w-4 h-4" />
           <span>
@@ -163,12 +215,19 @@ export default function SubscriptionInfo({
 
       {/* Action Buttons */}
       <div className="flex gap-3 pt-4">
-        {tier === 'free' ? (
+        {tier === 'free' && !isTrial ? (
           <a
             href="/pricing"
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition text-center"
           >
             Upgrade Plan
+          </a>
+        ) : isTrial ? (
+          <a
+            href="/pricing"
+            className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-3 rounded-lg font-semibold transition text-center"
+          >
+            Subscribe Now
           </a>
         ) : (
           <button

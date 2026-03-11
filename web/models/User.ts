@@ -18,6 +18,9 @@ export interface IUser extends Document {
   subscriptionCurrentPeriodStart?: Date;
   subscriptionCurrentPeriodEnd?: Date;
   cancelAtPeriodEnd?: boolean;
+  // Trial fields
+  trialEndsAt?: Date;
+  trialTier?: SubscriptionTier;
   // Usage tracking
   tradesThisMonth: number;
   tradersLimit: number;
@@ -86,6 +89,14 @@ const userSchema = new Schema<IUser>(
     cancelAtPeriodEnd: {
       type: Boolean,
       default: false,
+    },
+    // Trial fields
+    trialEndsAt: {
+      type: Date,
+    },
+    trialTier: {
+      type: String,
+      enum: ['free', 'basic', 'pro', 'enterprise'],
     },
     // Usage tracking
     tradesThisMonth: {

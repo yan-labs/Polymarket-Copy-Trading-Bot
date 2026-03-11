@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { connectToDatabase } from "@/lib/mongodb"
-import { User } from "@/models/User"
+import { User, TIER_LIMITS } from "@/models/User"
+
+// 7-day free trial duration in milliseconds
+const TRIAL_DURATION_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,15 +53,29 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Create user
+    // Set up 7-day Pro trial
+    const trialEndsAt = new Date(Date.now() + TRIAL_DURATION_MS)
+
+    // Create user with trial
     const user = await User.create({
       email: email.toLowerCase(),
       password: hashedPassword,
       proxyWallet: proxyWallet.toLowerCase(),
+      // Start with Pro tier during trial
+      subscriptionTier: "pro",
+      subscriptionStatus: "trialing",
+      trialEndsAt,
+      trialTier: "pro",
+      tradersLimit: TIER_LIMITS.pro.traders, // 20 traders during trial
     })
 
     return NextResponse.json(
-      { message: "User created successfully", userId: user._id },
+      { 
+        message: "User created successfully", 
+        userId: user._id,
+        trialEndsAt: trialEndsAt.toISOString(),
+        trialTier: "pro"
+      },
       { status: 201 }
     )
   } catch (error) {
