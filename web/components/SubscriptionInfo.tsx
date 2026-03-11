@@ -15,6 +15,8 @@ interface SubscriptionInfoProps {
   trialEndsAt?: string;
   trialDaysRemaining?: number;
   trialTier?: SubscriptionTier;
+  // Demo mode
+  isDemo?: boolean;
 }
 
 export default function SubscriptionInfo({
@@ -27,6 +29,7 @@ export default function SubscriptionInfo({
   trialEndsAt,
   trialDaysRemaining,
   trialTier,
+  isDemo = false,
 }: SubscriptionInfoProps) {
   const [loading, setLoading] = useState(false);
 
@@ -57,6 +60,16 @@ export default function SubscriptionInfo({
   };
 
   const getStatusBadge = () => {
+    // Show demo badge if demo mode
+    if (isDemo) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
+          <AlertCircle className="w-3 h-3" />
+          Demo
+        </span>
+      );
+    }
+
     // Show trial badge if on trial
     if (isTrial) {
       return (
@@ -125,6 +138,24 @@ export default function SubscriptionInfo({
               </p>
               <p className="text-gray-400 text-xs mt-2">
                 Enjoy unlimited access to all features. Subscribe to keep your access.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Demo Mode Banner */}
+      {isDemo && (
+        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-yellow-300 font-medium">Demo Mode Active</p>
+              <p className="text-gray-300 text-sm mt-1">
+                You&apos;re using a demo subscription. No payment was processed.
+              </p>
+              <p className="text-gray-400 text-xs mt-2">
+                This is for testing purposes only. Set up Stripe payments for production use.
               </p>
             </div>
           </div>

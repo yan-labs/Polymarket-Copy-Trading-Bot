@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check } from 'lucide-react';
+import { Check, AlertCircle } from 'lucide-react';
 
 const TIERS = [
   {
@@ -69,6 +69,12 @@ export default function PricingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [isDemoMode, setIsDemoMode] = useState(false);
+
+  // Check if demo mode is enabled
+  useEffect(() => {
+    setIsDemoMode(process.env.NEXT_PUBLIC_DEMO_MODE === 'true');
+  }, []);
 
   const handleSelectPlan = async (tier: string) => {
     if (tier === 'free') {
@@ -79,7 +85,10 @@ export default function PricingPage() {
     setLoading(tier);
 
     try {
-      const response = await fetch('/api/stripe/checkout', {
+      // Use demo checkout route if in demo mode
+      const checkoutRoute = isDemoMode ? '/api/demo/subscribe' : '/api/stripe/checkout';
+
+      const response = await fetch(checkoutRoute, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,11 +101,22 @@ export default function PricingPage() {
 
       const data = await response.json();
 
-      if (data.url) {
-        window.location.href = data.url;
+      if (isDemoMode) {
+        // Demo mode - just redirect to dashboard
+        if (data.success) {
+          router.push('/dashboard?demo=success');
+        } else {
+          alert(data.error || 'Failed to activate demo subscription');
+          setLoading(null);
+        }
       } else {
-        alert(data.error || 'Failed to create checkout session');
-        setLoading(null);
+        // Normal Stripe flow
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert(data.error || 'Failed to create checkout session');
+          setLoading(null);
+        }
       }
     } catch (error) {
       console.error('Checkout error:', error);
@@ -126,6 +146,19 @@ export default function PricingPage() {
 
       {/* Pricing Section */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        {/* Demo Mode Banner */}
+        {isDemoMode && (
+          <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-4 mb-8 flex items-center gap-3">
+            <AlertCircle className="w-6 h-6 text-yellow-500 flex-shrink-0" />
+            <div>
+              <h3 className="font-bold text-yellow-500">Demo Mode Active</h3>
+              <p className="text-yellow-200/80 text-sm">
+                You&apos;re in demo mode. Subscriptions will be activated without payment for testing purposes.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
