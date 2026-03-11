@@ -19,6 +19,7 @@ interface ISettings {
     minOrderSizeUSD: number;
     maxPositionSizeUSD?: number;
     maxDailyVolumeUSD?: number;
+    tradeMultiplier?: number;
     followedTraders: string[];
     notifications: {
         email: boolean;
@@ -26,6 +27,7 @@ interface ISettings {
         newTrade: boolean;
         positionClosed: boolean;
         dailySummary: boolean;
+        riskAlerts?: boolean;
     };
 }
 
@@ -67,6 +69,7 @@ const settingsSchema = new mongoose.Schema(
             newTrade: { type: Boolean, default: true },
             positionClosed: { type: Boolean, default: true },
             dailySummary: { type: Boolean, default: false },
+            riskAlerts: { type: Boolean, default: true },
         },
     },
     { timestamps: true }

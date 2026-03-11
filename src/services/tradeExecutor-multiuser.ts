@@ -10,6 +10,8 @@ import userManager, { UserWithSettings } from './userManager';
 import { updateHeartbeat, incrementTradeCount, logError, markStopped } from '../utils/botStatus';
 import { decryptPrivateKey } from '../utils/encryption';
 import { createClobClientForUser } from '../utils/createClobClient';
+import riskManager, { RiskEvent } from './riskManager';
+import telegramNotifier from './telegramNotifier';
 
 const RETRY_LIMIT = ENV.RETRY_LIMIT;
 const TRADE_AGGREGATION_ENABLED = ENV.TRADE_AGGREGATION_ENABLED;
@@ -173,9 +175,39 @@ const executeTradeForUser = async (
 ) => {
     const { user, settings } = userWithSettings;
     const proxyWallet = user.proxyWallet;
+    const userId = user._id.toString();
 
     if (!user.privateKey) {
         Logger.error(`User ${user.email} has no private key configured`);
+        return;
+    }
+
+    // Calculate trade size based on strategy
+    let tradeSize = trade.usdcSize;
+    if (settings.copyStrategy === 'PERCENTAGE') {
+        tradeSize = trade.usdcSize * (settings.copySize / 100);
+    } else if (settings.copyStrategy === 'FIXED') {
+        tradeSize = settings.copySize;
+    }
+    
+    // Apply trade multiplier if set
+    if (settings.tradeMultiplier) {
+        tradeSize *= settings.tradeMultiplier;
+    }
+
+    // Risk check - should we allow this trade?
+    const riskCheck = riskManager.shouldAllowTrade(userId, traderAddress, tradeSize);
+    if (!riskCheck.allowed) {
+        Logger.warning(`🛑 Trade blocked for ${user.email}: ${riskCheck.reason}`);
+        
+        // Send risk alert via Telegram if enabled
+        if (settings.notifications.telegram && settings.notifications.riskAlerts) {
+            await telegramNotifier.sendAlert(
+                settings.notifications.telegram,
+                'Trade Blocked',
+                `A trade from ${traderAddress.slice(0, 6)}...${traderAddress.slice(-4)} was blocked:\n${riskCheck.reason}`
+            );
+        }
         return;
     }
 
@@ -226,16 +258,71 @@ const executeTradeForUser = async (
     Logger.balance(my_balance, trader_balance, traderAddress);
 
     // Execute the trade with user-specific ClobClient
-    await postOrder(
-        userClobClient,
-        trade.side === 'BUY' ? 'buy' : 'sell',
-        my_position,
-        trader_position,
-        trade,
-        my_balance,
-        trader_balance,
-        traderAddress
-    );
+    try {
+        await postOrder(
+            userClobClient,
+            trade.side === 'BUY' ? 'buy' : 'sell',
+            my_position,
+            trader_position,
+            trade,
+            my_balance,
+            trader_balance,
+            traderAddress
+        );
+
+        // Increment trade count on success
+        await incrementTradeCount();
+
+        // Update risk manager with new position
+        if (my_position) {
+            riskManager.updatePosition({
+                id: `${userId}-${trade.conditionId}-${trade.asset}`,
+                userId,
+                traderAddress,
+                market: trade.slug || trade.asset,
+                outcome: trade.asset,
+                entryPrice: trade.price,
+                currentPrice: trade.price,
+                size: tradeSize,
+                entryValue: tradeSize,
+                currentValue: tradeSize,
+                pnl: 0,
+                pnlPercent: 0,
+                highestPrice: trade.price,
+                openedAt: new Date(),
+            });
+        }
+
+        // Send Telegram notification if enabled
+        if (settings.notifications.telegram && settings.notifications.newTrade) {
+            await telegramNotifier.sendTradeNotification(settings.notifications.telegram, {
+                type: 'TRADE_COPIED',
+                userId,
+                traderAddress,
+                market: trade.slug || trade.asset,
+                outcome: trade.asset,
+                amount: `$${tradeSize.toFixed(2)}`,
+                price: trade.price.toFixed(4),
+            });
+        }
+
+        Logger.success(`✓ Trade executed for ${user.email}`);
+    } catch (error) {
+        Logger.error(`Failed to execute for ${user.email}: ${error}`);
+        
+        // Send error notification
+        if (settings.notifications.telegram && settings.notifications.riskAlerts) {
+            await telegramNotifier.sendTradeNotification(settings.notifications.telegram, {
+                type: 'TRADE_FAILED',
+                userId,
+                traderAddress,
+                market: trade.slug || trade.asset,
+                outcome: trade.asset,
+                amount: `$${tradeSize.toFixed(2)}`,
+                error: String(error),
+            });
+        }
+    }
 };
 
 /**
@@ -322,6 +409,39 @@ export const stopTradeExecutor = async () => {
 };
 
 /**
+ * Check and execute risk triggers (stop-loss, take-profit, trailing stop)
+ */
+const checkRiskTriggers = async () => {
+    const users = await userManager.getActiveUsers();
+    
+    for (const userWithSettings of users) {
+        const { user, settings } = userWithSettings;
+        const userId = user._id.toString();
+        
+        // Get risk events (stop-loss, take-profit triggers)
+        const events = riskManager.checkPositionTriggers(userId);
+        
+        for (const event of events) {
+            Logger.info(`🚨 Risk trigger for ${user.email}: ${event.type} - ${event.details}`);
+            
+            if (event.action === 'SELL_POSITION') {
+                // Execute sell order
+                Logger.info(`   Executing sell for risk management...`);
+                
+                // Send Telegram notification
+                if (settings.notifications.telegram && settings.notifications.riskAlerts) {
+                    await telegramNotifier.sendAlert(
+                        settings.notifications.telegram,
+                        `${event.type.replace(/_/g, ' ')}`,
+                        event.details
+                    );
+                }
+            }
+        }
+    }
+};
+
+/**
  * Get current executor status
  */
 export const getExecutorStatus = () => {
@@ -350,8 +470,10 @@ const tradeExecutorMultiUser = async () => {
     let lastCheck = Date.now();
     const REFRESH_INTERVAL = 30000; // Refresh trader list every 30s
     const HEARTBEAT_INTERVAL = 10000; // Send heartbeat every 10s
+    const RISK_CHECK_INTERVAL = 60000; // Check risk triggers every 60s
     let lastRefresh = 0;
     let lastHeartbeat = 0;
+    let lastRiskCheck = 0;
 
     while (isRunning) {
         const now = Date.now();
@@ -367,6 +489,12 @@ const tradeExecutorMultiUser = async () => {
         if (now - lastRefresh > REFRESH_INTERVAL) {
             await refreshTraders();
             lastRefresh = now;
+        }
+
+        // Check risk triggers periodically (stop-loss, take-profit, trailing stop)
+        if (now - lastRiskCheck > RISK_CHECK_INTERVAL) {
+            await checkRiskTriggers();
+            lastRiskCheck = now;
         }
 
         const trades = await readNewTrades();
