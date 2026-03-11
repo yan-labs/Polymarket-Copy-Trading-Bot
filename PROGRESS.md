@@ -1,8 +1,20 @@
 # PROGRESS.md - Polymarket Copy Trading Bot
 
-## Current Status: Phase 4 Complete - Ready for Launch! 🚀
+## Current Status: Phase 5 Ready - Deployment Configured! 🚀
 
-**Last Updated**: 2026-03-11 08:45 (Asia/Shanghai)
+**Last Updated**: 2026-03-11 09:15 (Asia/Shanghai)
+
+### Latest Updates (2026-03-11 09:09-09:15) 🔥 DEPLOYMENT CONFIG & FREE TRIAL
+- [x] **7-day free trial** - New users get Pro tier for 7 days
+- [x] **Trial UI** - Shows days remaining, trial banner, expiration warning
+- [x] **Auto-downgrade** - Trials expire automatically to free tier
+- [x] **Competitive analysis** - Documented MirrorCopy as main competitor
+- [x] **Docker configuration** - Dockerfile + docker-compose.yml
+- [x] **PM2 configuration** - ecosystem.config.js for process management
+- [x] **Environment template** - .env.production with all variables documented
+- [x] **Deploy script** - deploy.sh for easy deployment
+- [x] **Launch checklist** - Complete step-by-step launch guide
+- [x] **Committed and pushed to GitHub** ✅
 
 ### Latest Updates (2026-03-11 08:40-08:45) 🔥 STRIPE INTEGRATION COMPLETE
 - [x] **Stripe checkout API** - Create subscription checkout sessions
@@ -113,7 +125,35 @@
 
 ---
 
-## 📋 Phase 5: Launch (NEXT STEPS)
+## 📋 Phase 5: Launch (IN PROGRESS)
+
+### ✅ Completed This Session
+1. **7-day Free Trial**
+   - New users automatically get Pro tier for 7 days
+   - UI shows trial status and days remaining
+   - Auto-downgrade to free tier when trial expires
+   - Matches MirrorCopy's barrier-lowering tactic
+
+2. **Competitive Analysis**
+   - Documented main competitor: MirrorCopy
+   - Analyzed pricing: Our Pro ($59) vs their Growth ($79)
+   - Identified feature gaps to address post-launch
+
+3. **Deployment Configuration**
+   - Dockerfile for bot (multi-stage, production-ready)
+   - Dockerfile.web for Next.js dashboard
+   - docker-compose.yml for full stack deployment
+   - PM2 ecosystem.config.js for process management
+   - deploy.sh script for easy deployment
+   - .env.production template with all variables
+
+4. **Launch Checklist**
+   - Created comprehensive LAUNCH_CHECKLIST.md
+   - Step-by-step instructions for each phase
+   - Testing checklist
+   - Marketing channels list
+
+### 🔲 Remaining Tasks
 
 ### Before Launch
 1. **Create Stripe Products**
@@ -181,8 +221,16 @@ poly-copybot-fork/
 │   │       └── ...
 │   ├── components/
 │   │   └── SubscriptionInfo.tsx
-│   └── lib/
-│       └── stripe.ts
+│   ├── lib/
+│   │   └── stripe.ts
+│   └── Dockerfile.web  # Docker config for web
+├── Dockerfile        # Docker config for bot
+├── docker-compose.yml # Full stack deployment
+├── ecosystem.config.js # PM2 config
+├── deploy.sh         # Deployment script
+├── .env.production   # Environment template
+├── LAUNCH_CHECKLIST.md # Step-by-step launch guide
+├── COMPETITIVE_ANALYSIS.md # Competitor research
 └── docs/
 ```
 
@@ -207,32 +255,40 @@ npm run dev:multiuser
 - **API Routes**: 12
 - **Build Status**: ✅ SUCCESS
 - **Revenue Ready**: ✅ YES
+- **Deploy Config**: ✅ YES
+- **Free Trial**: ✅ YES (7 days Pro)
 
 ---
 
 ## Next Immediate Steps
 
-### To Get First Paying Customer:
+### To Get First Paying Customer (Updated):
 
-1. **Create Stripe Products** (10 min)
+1. **Create Stripe Products** (10 min) ⚠️ MANUAL STEP
    - Go to dashboard.stripe.com
    - Create products and prices
-   - Update `STRIPE_PRICES` in code
+   - Update `STRIPE_PRICES` in `web/lib/stripe.ts`
+   - See LAUNCH_CHECKLIST.md for detailed steps
 
-2. **Deploy Web App** (15 min)
-   - Push to Vercel or Render
-   - Set environment variables
-   - Test registration flow
+2. **Set up MongoDB Atlas** (15 min) ⚠️ MANUAL STEP
+   - Create free cluster at mongodb.com/atlas
+   - Get connection string
+   - Add to .env as MONGO_URI
 
-3. **Deploy Bot** (30 min)
-   - Set up VPS (DigitalOcean droplet)
-   - Clone repo, install dependencies
-   - Run with PM2 for auto-restart
+3. **Deploy Web App** (15 min)
+   - Push to Vercel (auto-deploys from GitHub)
+   - Set environment variables in Vercel dashboard
+   - Test registration and checkout flow
 
-4. **Get First Users**
-   - Share in Polymarket Discord
-   - Post on Twitter/X
-   - Submit to AI product directories
+4. **Deploy Bot** (30 min)
+   - Provision VPS (DigitalOcean, Railway, or Fly.io)
+   - Clone repo and configure .env
+   - Run `./deploy.sh bot` or use Docker
+
+5. **Launch!**
+   - Follow LAUNCH_CHECKLIST.md
+   - Post in Polymarket Discord
+   - Submit to Product Hunt
 
 ---
 
