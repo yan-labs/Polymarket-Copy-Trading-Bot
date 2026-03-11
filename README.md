@@ -1,136 +1,242 @@
-![](asset/logo.png)
+# PolyCopy - Polymarket Copy Trading SaaS
 
-# Polymarket Copy Trading Bot
+> **Automated copy trading platform for Polymarket.** Follow top traders, copy their bets automatically, and profit while you sleep.
 
-> Automated copy trading bot for Polymarket that mirrors trades from top performers with intelligent position sizing and real-time execution. Version 2.0 employs the fastest transaction detection method, enabling near-instantaneous trade replication with lower latency and reduced API load. The copy trading feature in Version 2.0 delivers outstanding performance and resolves all issues previously encountered with “Cloudflare” and VPNs in older versions.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyan-labs%2FPolymarket-Copy-Trading-Bot&root-directory=web)
 
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-green.svg)
+![Status](https://img.shields.io/badge/status-production%20ready-brightgreen.svg)
 
-## Overview
+---
 
-The Polymarket Copy Trading Bot automatically replicates trades from successful Polymarket traders to your wallet. It monitors trader activity 24/7, calculates proportional position sizes based on your capital, and executes matching orders in real-time.
+## 🚀 What is PolyCopy?
 
-### How It Works
+PolyCopy is a **SaaS platform** that lets anyone automatically copy trades from successful Polymarket traders. No coding required. Just connect your wallet, pick traders to follow, and let the bot do the rest.
 
-![](asset/howitworks.png)
+### Why PolyCopy?
 
-1. **Select Traders** - Choose top performers from [Polymarket leaderboard](https://polymarket.com/leaderboard) or [Predictfolio](https://predictfolio.com)
-2. **Monitor Activity** - Bot continuously watches for new positions opened by selected traders using Polymarket Data API
-3. **Calculate Size** - Automatically scales trades based on your balance vs. trader's balance
-4. **Execute Orders** - Places matching orders on Polymarket using your wallet
-5. **Track Performance** - Maintains complete trade history in MongoDB
+- **💰 Profit from Expert Traders** - Copy winning strategies from top performers
+- **⏰ Save Time** - No need to watch markets 24/7
+- **🎯 Reduce Risk** - Diversify by following multiple traders
+- **📊 Track Everything** - Full analytics and trade history
 
-## Quick Start
+---
+
+## ✨ Features
+
+### For Users
+- **One-Click Setup** - Connect wallet, pick traders, start copying
+- **Real-Time Execution** - Trades copied within seconds
+- **Smart Position Sizing** - Automatically scales to your balance
+- **Multi-Trader Support** - Follow up to 100 traders (by plan)
+- **Risk Controls** - Set max position sizes and stop losses
+- **7-Day Free Trial** - Try Pro features before paying
+
+### For Operators
+- **Multi-Tenant Architecture** - Serve unlimited users
+- **Stripe Billing** - Subscription management built-in
+- **MongoDB Backend** - Scalable data storage
+- **Docker Ready** - One-command deployment
+- **Admin Dashboard** - Monitor all users and trades
+
+---
+
+## 💰 Pricing
+
+| Plan | Price | Traders | Features |
+|------|-------|---------|----------|
+| **Free** | $0 | 1 | Basic copy trading, community support |
+| **Basic** | $29/mo | 5 | Advanced strategies, priority support |
+| **Pro** | $59/mo | 20 | Analytics, API access, Telegram alerts |
+| **Enterprise** | $99/mo | 100 | Dedicated support, white-label option |
+
+**All plans include 7-day free trial of Pro features.**
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Next.js Web   │────▶│    MongoDB      │◀────│   Bot Engine    │
+│   (Dashboard)   │     │   (Database)    │     │  (TypeScript)   │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+        │                                               │
+        ▼                                               ▼
+┌─────────────────┐                           ┌─────────────────┐
+│     Stripe      │                           │   Polymarket    │
+│   (Payments)    │                           │   CLOB API      │
+└─────────────────┘                           └─────────────────┘
+```
+
+### Tech Stack
+- **Frontend**: Next.js 16, React 19, Tailwind CSS, Radix UI
+- **Backend**: TypeScript, Node.js
+- **Database**: MongoDB (Atlas or self-hosted)
+- **Payments**: Stripe (subscriptions + billing portal)
+- **Auth**: NextAuth.js (email/password)
+- **Deployment**: Docker, PM2, Vercel
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
+- Node.js 18+
+- MongoDB (Atlas free tier works)
+- Stripe account (for payments)
+- Polygon wallet with USDC
 
-- [Node.js](https://nodejs.org/en/download) v18+
-- MongoDB database ([MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register) free tier works)
-- Polygon wallet with USDC and POL/MATIC for gas
-- RPC endpoint ([Infura](https://infura.io) or [Alchemy](https://www.alchemy.com) free tier)
+### 1. Clone & Install
 
-### Installation
-
-#### Clone repository
 ```bash
-git clone https://github.com/ZeljkoMarinkovi/Polymarket-Copy-Trading-Bot
-
+git clone https://github.com/yan-labs/Polymarket-Copy-Trading-Bot.git
 cd Polymarket-Copy-Trading-Bot
-```
-
-#### Install dependencies
-```bash
 npm install
+cd web && npm install && cd ..
 ```
 
-##### Configure Environment
+### 2. Configure Environment
+
 ```bash
-# Copy the example config
 cp .env.example .env
+cp web/.env.example web/.env.local
 ```
 
-Edit `.env` with your settings:
+Edit `.env` and `web/.env.local` with your values:
 
 ```bash
-# Traders to copy (find addresses on Polymarket leaderboard)
-USER_ADDRESSES = '0x6a72f61820b26b1fe4d956e17b6dc2a1ea3033ee'
+# Required for Web
+NEXTAUTH_URL=https://yourdomain.com
+NEXTAUTH_SECRET=<random-32-char-string>
+MONGODB_URI=mongodb+srv://...
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 
-# Your trading wallet (the wallet that will execute trades)
-PROXY_WALLET = 'your_polygon_wallet_address'
-PRIVATE_KEY = 'your_private_key_without_0x_prefix'
-
-# MongoDB (get free database at mongodb.com/cloud/atlas)
-# The default link in your .env file is currently functional, but it is recommended that you replace it with your own.
-MONGO_URI = 'mongodb+srv://username:password@cluster.mongodb.net/database'
-
-# Polygon RPC (get free key at infura.io or alchemy.com)
-# The default link in your .env file is currently functional, but it is recommended that you replace it with your own.
-RPC_URL = 'https://polygon-mainnet.infura.io/v3/YOUR_PROJECT_ID'
-
-# Don't change these
-CLOB_HTTP_URL = 'https://clob.polymarket.com/'
-CLOB_WS_URL = 'wss://ws-subscriptions-clob.polymarket.com/ws'
-USDC_CONTRACT_ADDRESS = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'
+# Required for Bot
+MONGO_URI=mongodb+srv://...
+RPC_URL=https://polygon-mainnet.infura.io/v3/...
 ```
 
-#### Build and start
+### 3. Create Stripe Products
+
+**Option A: Automatic (Recommended)**
 ```bash
+./setup.sh
+```
+
+**Option B: Manual**
+See [LAUNCH_CHECKLIST.md](./LAUNCH_CHECKLIST.md) for step-by-step instructions.
+
+### 4. Deploy
+
+**Web (Vercel)**
+```bash
+cd web
+vercel --prod
+```
+
+**Bot (VPS/Docker)**
+```bash
+docker-compose up -d bot
+```
+
+---
+
+## 📁 Project Structure
+
+```
+poly-copybot-fork/
+├── src/                    # Bot backend (TypeScript)
+│   ├── services/
+│   │   ├── userManager.ts
+│   │   ├── tradeMonitor-multiuser.ts
+│   │   └── tradeExecutor-multiuser.ts
+│   └── index-multiuser.ts
+├── web/                    # Next.js SaaS frontend
+│   ├── app/
+│   │   ├── (auth)/         # Login, Register
+│   │   ├── (dashboard)/    # Dashboard, Positions, Traders, Settings
+│   │   ├── (marketing)/    # Landing, Pricing
+│   │   └── api/            # REST API routes
+│   ├── components/
+│   └── lib/
+├── Dockerfile              # Bot Docker config
+├── docker-compose.yml      # Full stack deployment
+├── setup.sh                # Automated Stripe setup
+├── deploy.sh               # Deployment script
+└── LAUNCH_CHECKLIST.md     # Step-by-step launch guide
+```
+
+---
+
+## 📖 Documentation
+
+- **[LAUNCH_CHECKLIST.md](./LAUNCH_CHECKLIST.md)** - Complete launch guide
+- **[COMPETITIVE_ANALYSIS.md](./COMPETITIVE_ANALYSIS.md)** - Market research
+- **[docs/](./docs/)** - Original bot documentation
+
+---
+
+## 🔒 Security
+
+- **Private keys are encrypted** with AES-256-GCM
+- **Non-custodial** - Users keep control of their wallets
+- **No seed phrases stored** - Only private keys for signing
+- **Rate limiting** on API routes
+- **Input validation** on all forms
+
+---
+
+## 📊 Market Opportunity
+
+Polymarket is the largest prediction market with millions in daily volume. Copy trading is a proven model in crypto (Binance, Bybit).
+
+**Target market**: 1,000-10,000 users willing to pay for automation
+
+**Revenue potential**: $59K-$590K/month at $59 average
+
+---
+
+## 🛠️ Development
+
+```bash
+# Web development
+cd web && npm run dev
+
+# Bot development (single-user)
+npm run dev
+
+# Bot development (multi-user SaaS)
+npm run dev:multiuser
+
+# Run tests
+npm test
+
+# Build for production
 npm run build
-npm run health-check  # Verify configuration
-npm start             # Start trading
 ```
 
-**📖 For detailed setup instructions, see [Getting Started Guide](./docs/GETTING_STARTED.md)**
+---
 
-## Features
+## 📝 License
 
-- **Multi-Trader Support** - Track and copy trades from multiple traders simultaneously
-- **Smart Position Sizing** - Automatically adjusts trade sizes based on your capital
-- **Tiered Multipliers** - Apply different multipliers based on trade size
-- **Position Tracking** - Accurately tracks purchases and sells even after balance changes
-- **Trade Aggregation** - Combines multiple small trades into larger executable orders
-- **Real-time Execution** - Monitors trades every second and executes instantly
-- **MongoDB Integration** - Persistent storage of all trades and positions
-- **Price Protection** - Built-in slippage checks to avoid unfavorable fills
+MIT License - See [LICENSE](LICENSE.md)
 
-### Monitoring Method
+---
 
-The bot currently uses the **Polymarket Data API** to monitor trader activity and detect new positions. The monitoring system polls trader positions at configurable intervals (default: 1 second) to ensure timely trade detection and execution.
+## 🤝 Credits
 
-## Configuration
+- Original bot by [ZeljkoMarinkovic](https://github.com/ZeljkoMarinkovic/Polymarket-Copy-Trading-Bot)
+- SaaS platform by [Yan Labs](https://github.com/yan-labs)
 
-### Essential Variables
+---
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `USER_ADDRESSES` | Traders to copy (comma-separated) | `'0xABC..., 0xDEF...'` |
-| `PROXY_WALLET` | Your Polygon wallet address | `'0x123...'` |
-| `PRIVATE_KEY` | Wallet private key (no 0x prefix) | `'abc123...'` |
-| `MONGO_URI` | MongoDB connection string | `'mongodb+srv://...'` |
-| `RPC_URL` | Polygon RPC endpoint | `'https://polygon...'` |
-| `TRADE_MULTIPLIER` | Position size multiplier (default: 1.0) | `2.0` |
-| `FETCH_INTERVAL` | Check interval in seconds (default: 1) | `1` |
+## ⚠️ Disclaimer
 
-### Finding Traders
+This software is for educational purposes. Trading involves risk of loss. The developers are not responsible for any financial losses.
 
-1. Visit [Polymarket Leaderboard](https://polymarket.com/leaderboard)
-2. Look for traders with positive P&L, win rate >55%, and active trading history
-3. Verify detailed stats on [Predictfolio](https://predictfolio.com)
-4. Add wallet addresses to `USER_ADDRESSES`
+---
 
-**📖 For complete configuration guide, see [Quick Start](./docs/QUICK_START.md)**
-
-## Documentation
-
-### Getting Started
-- **[🚀 Getting Started Guide](./docs/GETTING_STARTED.md)** - Complete beginner's guide
-- **[⚡ Quick Start](./docs/QUICK_START.md)** - Fast setup for experienced users
-
-## License
-
-MIT License - See [LICENSE](LICENSE.md) file for details.
-
-
-**Disclaimer:** This software is for educational purposes only. Trading involves risk of loss. The developers are not responsible for any financial losses incurred while using this bot.
-
-
-**Support:** For questions or issues, contact via Discord: `ZeljkoMarinkovi`
+**Questions?** Open an issue or reach out on Telegram.
